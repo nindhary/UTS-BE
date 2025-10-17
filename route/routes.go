@@ -53,6 +53,7 @@ func RegisterRoutes(app *fiber.App) {
 	pekerjaan.Get("/trash", pekerjaanService.GetTrash)
 	pekerjaan.Put("/restore/:id", pekerjaanService.Restore)
 	pekerjaan.Delete("/harddelete/:id", pekerjaanService.HardDelete)
+
 	pekerjaan.Get("/alumni/:alumni_id", middleware.AdminOnly(), pekerjaanService.GetByAlumniHandler)
 	pekerjaan.Get("/:id", pekerjaanService.GetByIDHandler)
 	pekerjaan.Get("/", pekerjaanService.GetAllHandler)

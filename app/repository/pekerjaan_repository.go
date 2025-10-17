@@ -271,7 +271,7 @@ func (r *pekerjaanRepository) GetTrash() ([]models.PekerjaanAlumni, error) {
 
 // restore soft deleted data
 func (r *pekerjaanRepository) Restore(id int) error {
-	query := "UPDATE pekerjaan SET deleted_at = NULL WHERE id = ? AND deleted_at IS NOT NULL"
+	query := "UPDATE pekerjaan_alumni SET isdeleted = TRUE WHERE id = $1 AND isdeleted = NULL"
 	result, err := database.DB.Exec(query, id)
 	if err != nil {
 		return err
@@ -287,7 +287,7 @@ func (r *pekerjaanRepository) Restore(id int) error {
 
 // hard delete
 func (r *pekerjaanRepository) HardDelete(id int) error {
-	query := "DELETE FROM pekerjaan WHERE id = ? AND deleted_at IS NOT NULL"
+	query := "DELETE FROM pekerjaan_alumni WHERE id = $1 AND isdeleted = TRUE"
 	result, err := database.DB.Exec(query, id)
 	if err != nil {
 		return err
