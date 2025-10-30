@@ -19,7 +19,7 @@ func RegisterRoutes(app *fiber.App) {
 	}
 
 	// ===== BASE GROUP =====
-	api := app.Group("/TM4")
+	api := app.Group("/app")
 
 	// ===== PUBLIC =====
 	authSvc := service.NewAuthService(db)
@@ -50,9 +50,9 @@ func RegisterRoutes(app *fiber.App) {
 	pekerjaanService := service.NewPekerjaanService(pekerjaanRepo)
 	pekerjaan := protected.Group("/pekerjaan")
 
-	pekerjaan.Get("/trash", pekerjaanService.GetTrash)
-	pekerjaan.Put("/restore/:id", pekerjaanService.Restore)
-	pekerjaan.Delete("/harddelete/:id", pekerjaanService.HardDelete)
+	pekerjaan.Get("/trash", middleware.UserOrAdmin(pekerjaanRepo), pekerjaanService.GetTrash)
+	pekerjaan.Put("/restore/:id", middleware.UserOrAdmin(pekerjaanRepo), pekerjaanService.Restore)
+	pekerjaan.Delete("/harddelete/:id", middleware.UserOrAdmin(pekerjaanRepo), pekerjaanService.HardDelete)
 
 	pekerjaan.Get("/alumni/:alumni_id", middleware.AdminOnly(), pekerjaanService.GetByAlumniHandler)
 	pekerjaan.Get("/:id", pekerjaanService.GetByIDHandler)
@@ -60,7 +60,6 @@ func RegisterRoutes(app *fiber.App) {
 	pekerjaan.Post("/", middleware.AdminOnly(), pekerjaanService.CreateHandler)
 	pekerjaan.Put("/:id", middleware.AdminOnly(), pekerjaanService.UpdateHandler)
 	pekerjaan.Delete("/:id", middleware.AdminOnly(), pekerjaanService.DeleteHandler)
-	pekerjaan.Delete("/soft/:id", pekerjaanService.SoftDelete)
+	pekerjaan.Delete("/soft/:id", middleware.UserOrAdmin(pekerjaanRepo), pekerjaanService.SoftDelete)
 
-	// pekerjaan.Delete("/soft/permanent", middleware.AdminOnly(), pekerjaanService.SoftDeleteBulk)
 }

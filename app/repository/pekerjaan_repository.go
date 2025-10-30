@@ -57,13 +57,15 @@ func (r *pekerjaanRepository) GetAll() ([]models.PekerjaanAlumni, error) {
 	return list, nil
 }
 
-// ===== Ambil by ID + user pemilik =====
 func (r *pekerjaanRepository) GetByID(id int) (models.PekerjaanAlumni, error) {
 	var p models.PekerjaanAlumni
-	err := database.DB.QueryRow(`
+
+	fmt.Println("DEBUG GetByID: mencari ID =", id)
+
+	query := `
 		SELECT p.id,
 		       p.alumni_id,
-		       a.user_id,
+		       COALESCE(a.user_id, 0) AS user_id,
 		       p.nama_perusahaan,
 		       p.posisi_jabatan,
 		       p.bidang_industri,
@@ -73,15 +75,18 @@ func (r *pekerjaanRepository) GetByID(id int) (models.PekerjaanAlumni, error) {
 		       p.tanggal_selesai_kerja,
 		       p.status_pekerjaan,
 		       p.deskripsi_pekerjaan,
+		       COALESCE(p.isdeleted, false) AS isdeleted,
 		       p.created_at,
 		       p.updated_at
 		FROM pekerjaan_alumni p
-		JOIN alumni a ON p.alumni_id = a.id
+		LEFT JOIN alumni a ON p.alumni_id = a.id
 		WHERE p.id = $1
-	`, id).Scan(
+	`
+
+	err := database.DB.QueryRow(query, id).Scan(
 		&p.ID,
 		&p.AlumniID,
-		&p.UserID, // penting: harus ada di struct
+		&p.UserID,
 		&p.NamaPerusahaan,
 		&p.PosisiJabatan,
 		&p.BidangIndustri,
@@ -91,10 +96,18 @@ func (r *pekerjaanRepository) GetByID(id int) (models.PekerjaanAlumni, error) {
 		&p.TanggalSelesaiKerja,
 		&p.StatusPekerjaan,
 		&p.DeskripsiPekerjaan,
+		&p.IsDeleted,
 		&p.CreatedAt,
 		&p.UpdatedAt,
 	)
-	return p, err
+
+	if err != nil {
+		fmt.Println("ERROR GetByID:", err)
+		return p, err
+	}
+
+	fmt.Printf("DEBUG GetByID RESULT: %+v\n", p)
+	return p, nil
 }
 
 // ===== Create =====
@@ -271,7 +284,7 @@ func (r *pekerjaanRepository) GetTrash() ([]models.PekerjaanAlumni, error) {
 
 // restore soft deleted data
 func (r *pekerjaanRepository) Restore(id int) error {
-	query := "UPDATE pekerjaan_alumni SET isdeleted = TRUE WHERE id = $1 AND isdeleted = NULL"
+	query := "UPDATE pekerjaan_alumni SET isdeleted = NULL WHERE id = $1 AND isdeleted = TRUE"
 	result, err := database.DB.Exec(query, id)
 	if err != nil {
 		return err

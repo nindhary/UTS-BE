@@ -182,6 +182,7 @@ func (s *pekerjaanService) SoftDelete(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(fiber.Map{"message": "pekerjaan soft deleted"})
+
 }
 
 func (s *pekerjaanService) GetTrash(c *fiber.Ctx) error {
